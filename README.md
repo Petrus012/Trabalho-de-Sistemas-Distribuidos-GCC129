@@ -68,7 +68,7 @@ cd frontend
 npm install
 npm run dev
 ```
-O sistema estará disponível para acesso no navegador em `http://localhost:3000` (ou a porta configurada no Frontend).
+O sistema estará disponível para acesso no navegador em ` http://localhost:5173/` (ou a porta configurada no Frontend).
 
 ## 👥 Equipe
 * **Pyêtro Augusto Malaquias** 
