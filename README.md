@@ -14,7 +14,7 @@ Na Fase 3, o ecossistema migrou de uma estrutura de acoplamento parcial para uma
 
 1. **Frontend (React / TypeScript / Vite):** Interface gráfica de usuário (App do Estudante) onde as perguntas são feitas e o histórico de interações é renderizado em tempo real.
 2. **API Gateway (Node.js / Express):** Ponto de entrada único e centralizado do backend (porta `8000`). Gerencia as políticas de roteamento e distribui as chamadas de forma transparente.
-3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe as ferramentas do sistema (ex: `consultar_documentos_aula`) e orquestra a injeção de contexto dinâmico para os modelos de linguagem.
+3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe as ferramentas do sistema. Além da consulta local (`consultar_documentos_aula`), **agora integra APIs externas para conectar a IA à internet**, permitindo buscas na web em tempo real e orquestrando a injeção desse contexto dinâmico para os modelos de linguagem.
 4. **Microsserviço RAG (`rag_service` - Python / FastAPI / LlamaIndex):** Responsável pelo processamento, chunking e indexação dos PDFs locais, alimentando e persistindo os embeddings no banco de dados vetorial.
 5. **Microsserviço de IA (`ia_service` - Python / FastAPI):** Camada dedicada exclusivamente para isolar e gerenciar as chamadas externas, o consumo e o processamento de prompts junto aos modelos de linguagem.
 6. **Microsserviço de Histórico (`historico_service` - Python / FastAPI):** Responsável por gerenciar o estado, a persistência e a recuperação cronológica do contexto de conversação de cada estudante.
@@ -45,6 +45,7 @@ Em relação à fase anterior, as seguintes melhorias de engenharia de software 
 * **Tipagem Estrita no Contrato de Ferramentas:** Migração da infraestrutura do `mcp_service` de JavaScript puro para TypeScript, garantindo maior segurança em tempo de compilação para os schemas do protocolo MCP.
 * **Persistência de Embeddings:** Consolidação física da base vetorial do ChromaDB (`chroma_db/`) e metadados de armazenamento (`storage/`), permitindo que as consultas ocorram de forma instantânea sem necessidade de reindexar os documentos a cada inicialização.
 * **Ampliação do Contexto:** Expansão da base de documentos para o módulo de infraestrutura, incluindo manuais avançados de redes sem fio.
+* **Conexão Externa (Internet):** Implementação de ferramentas via API no MCP que quebram o isolamento da LLM, permitindo que a IA realize pesquisas na web em tempo real para complementar respostas com informações atualizadas fora do RAG local.
 
 ---
 
