@@ -2,77 +2,117 @@
 
 Trabalho prático desenvolvido para a disciplina **GCC129 - Sistemas Distribuídos** da Universidade Federal de Lavras (UFLA), sob orientação do Prof. André de Lima Salgado.
 
-> **Status:** Em desenvolvimento (Fase 2 - Implementação Parcial)
+> **Status:** Fase 3 - Concluída (Arquitetura Expandida e Integração de Serviços)
 
-## Objetivo do Projeto
-Este projeto implementa um sistema inteligente e distribuído para atuar como um **Assistente Acadêmico**. Ele utiliza a arquitetura RAG (*Retrieval-Augmented Generation*) integrada ao MCP (*Model Context Protocol*) para responder a dúvidas de alunos com base em documentos reais fornecidos pelos professores, contornando alucinações e garantindo respostas fundamentadas em arquivos institucionais.
+## 📌 Objetivo do Projeto
+Este projeto implementa um sistema inteligente, distribuído e escalável para atuar como um **Assistente Acadêmico**. Ele utiliza a arquitetura RAG (*Retrieval-Augmented Generation*) integrada ao MCP (*Model Context Protocol*) para responder a dúvidas de alunos com base em documentos reais fornecidos pelos professores, contornando alucinações de IA e garantindo respostas rigorosamente fundamentadas em arquivos institucionais.
 
-## Arquitetura do Sistema
-O sistema foi construído utilizando uma abordagem de microsserviços, distribuindo as responsabilidades de interface, roteamento, integração de ferramentas e processamento de IA.
+---
 
-1. **Frontend (React / TypeScript):** Interface de usuário (App do Estudante) onde as perguntas são feitas.
-2. **API Gateway (Node.js / Express):** Ponto de entrada único (porta `8000`). Roteia as dúvidas dos alunos para o servidor MCP e as ações administrativas diretamente para o RAG.
-3. **Servidor MCP (Node.js / Express):** Expõe as ferramentas do sistema (ex: `consultar_documentos_aula`) e orquestra as chamadas para recuperação de contexto.
-4. **Microsserviço RAG (Python / FastAPI / LlamaIndex):** Responsável por ler os PDFs locais, processar os textos e armazenar os vetores no banco **ChromaDB**. Ele recebe o contexto e monta o prompt final.
-5. **Infraestrutura LLM (Google Colab / Ngrok):** Para contornar limitações de hardware local, a LLM **Qwen 2.5 (14B)** é executada na nuvem via Ollama, recebendo o prompt do serviço RAG através de um túnel seguro gerado pelo Ngrok.
+## 🏗️ Arquitetura do Sistema
+Na Fase 3, o ecossistema migrou de uma estrutura de acoplamento parcial para uma malha de microsserviços altamente especializada e resiliente, composta por 6 componentes ativos:
 
-## Estrutura do Repositório (Monorepo)
+1. **Frontend (React / TypeScript / Vite):** Interface gráfica de usuário (App do Estudante) onde as perguntas são feitas e o histórico de interações é renderizado em tempo real.
+2. **API Gateway (Node.js / Express):** Ponto de entrada único e centralizado do backend (porta `8000`). Gerencia as políticas de roteamento e distribui as chamadas de forma transparente.
+3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe as ferramentas do sistema (ex: `consultar_documentos_aula`) e orquestra a injeção de contexto dinâmico para os modelos de linguagem.
+4. **Microsserviço RAG (`rag_service` - Python / FastAPI / LlamaIndex):** Responsável pelo processamento, chunking e indexação dos PDFs locais, alimentando e persistindo os embeddings no banco de dados vetorial.
+5. **Microsserviço de IA (`ia_service` - Python / FastAPI):** Camada dedicada exclusivamente para isolar e gerenciar as chamadas externas, o consumo e o processamento de prompts junto aos modelos de linguagem.
+6. **Microsserviço de Histórico (`historico_service` - Python / FastAPI):** Responsável por gerenciar o estado, a persistência e a recuperação cronológica do contexto de conversação de cada estudante.
+7. **Infraestrutura LLM (Google Colab / Ngrok / Ollama):** Execução do modelo de linguagem **Qwen 2.5** utilizando aceleração por hardware (GPU T4 na nuvem) via Ollama, comunicando-se com o ecossistema local por meio de um túnel reverso seguro gerado pelo Ngrok.
+
+---
+
+## 📂 Estrutura do Repositório (Monorepo)
 
 ```bash
 /
-  ├── /api-gateway       # Ponto de entrada e roteamento (Node.js)
-  ├── /frontend          # Aplicação web do estudante (React)
-  ├── /mcp-server        # Servidor de ferramentas via Model Context Protocol
-  └── /rag-service       # Serviço de busca vetorial e IA (Python)
+  ├── api_gateway/         # Roteamento central e orquestração de chamadas (Node.js)
+  ├── documentos/          # Base de conhecimento (PDFs e manuais institucionais)
+  ├── frontend/            # Interface web SPA do estudante (React + TS)
+  ├── historico_service/   # Microsserviço de persistência de contexto (Python)
+  ├── ia_service/          # Microsserviço de isolamento da camada de LLM (Python)
+  ├── mcp_service/         # Servidor de ferramentas em Model Context Protocol (TypeScript)
+  ├── rag_service/         # Engine de busca vetorial e banco persistido ChromaDB (Python)
+  ├── arquitetura_fase3.jpg # Diagrama técnico atualizado do ecossistema distribuído
+  └── codigos_colab.pdf    # Scripts de automação e provisionamento da GPU na nuvem
 ```
 
-## Como Executar o Projeto
+---
 
-Como o sistema é composto por múltiplos microsserviços, é necessário iniciar cada componente individualmente. 
+## 🚀 Novidades Técnicas da Fase 3
+Em relação à fase anterior, as seguintes melhorias de engenharia de software distribuído foram consolidadas:
+* **Desacoplamento de Escopo:** Separação das responsabilidades de IA e Histórico de Sessão da antiga rota do RAG para microsserviços Python independentes (`ia_service` e `historico_service`).
+* **Tipagem Estrita no Contrato de Ferramentas:** Migração da infraestrutura do `mcp_service` de JavaScript puro para TypeScript, garantindo maior segurança em tempo de compilação para os schemas do protocolo MCP.
+* **Persistência de Embeddings:** Consolidação física da base vetorial do ChromaDB (`chroma_db/`) e metadados de armazenamento (`storage/`), permitindo que as consultas ocorram de forma instantânea sem necessidade de reindexar os documentos a cada inicialização.
+* **Ampliação do Contexto:** Expansão da base de documentos para o módulo de infraestrutura, incluindo manuais avançados de redes sem fio.
 
-### Passo 1: Subir a LLM na Nuvem (Backend IA)
-1. Acesse o Notebook do Google Colab fornecido pela equipe.
-2. Execute as células para instalar o Ollama, baixar o modelo Qwen 2.5 e iniciar o túnel Ngrok.
-3. Copie a URL pública gerada pelo Ngrok.
+---
 
-### Passo 2: Configurar o Microsserviço RAG
-1. Navegue até a pasta `rag-service`.
-2. Configure a URL do Ngrok no arquivo de ambiente (ex: `LLM_HOST=https://seu-link-ngrok.ngrok.io`).
-3. Instale as dependências e inicie o servidor (porta 8001):
+## 🛠️ Como Executar o Projeto
+
+Por se tratar de uma arquitetura de múltiplos microsserviços distribuídos, cada componente deve ser iniciado em uma aba de terminal dedicada. Siga a ordem recomendada de inicialização:
+
+### Passo 1: Provisionamento do Modelo na Nuvem (LLM Backend)
+1. Abra o arquivo `codigos_colab.pdf` e utilize as instruções para rodar o notebook na nuvem do Google Colab.
+2. Certifique-se de selecionar o ambiente com GPU (T4 ou superior).
+3. Execute todas as células para iniciar o Ollama, carregar a LLM e ativar o tunelamento do Ngrok.
+4. Copie a URL pública gerada (ex: `https://xxxx-xx-xx.ngrok-free.app`).
+
+### Passo 2: Configuração dos Ambientes (.env)
+Antes de ligar os serviços, atualize os arquivos `.env` dentro das pastas `rag_service`, `ia_service` e `historico_service` colando a URL gerada pelo Ngrok no campo correspondente à comunicação com o modelo de linguagem.
+
+### Passo 3: Inicialização dos Serviços em Python
+Abra terminais separados para cada serviço e execute:
+
+* **Microsserviço RAG:**
 ```bash
-cd rag-service
-pip install -r requirements.txt
-uvicorn main:app --port 8001
-```
-
-### Passo 3: Iniciar o Servidor MCP
-O servidor que gerencia as ferramentas para a IA (porta 8002):
+  cd rag-service
+  pip install -r requirements.txt
+  uvicorn main:app --port 8001 --reload
+  ```
+* **Microsserviço de IA:**
 ```bash
-cd mcp-server
-npm install
-npm start
-```
-
-### Passo 4: Iniciar o API Gateway
-O ponto de entrada que orquestra as requisições (porta 8000):
+  cd ia_service
+  pip install -r requirements.txt
+  uvicorn main:app --port 8003 --reload
+  ```
+* **Microsserviço de Histórico:**
 ```bash
-cd api-gateway
-npm install
-npm start
-```
+  cd historico_service
+  pip install -r requirements.txt
+  uvicorn main:app --port 8004 --reload
+  ```
 
-### Passo 5: Iniciar o Frontend
-A interface visual do usuário:
+### Passo 4: Inicialização dos Serviços em Node.js / TypeScript
+Abra novos terminais para rodar os servidores da camada de aplicação:
+
+* **Servidor MCP:**
+```bash
+  cd mcp_service
+  npm install
+  npm run dev
+  ```
+* **API Gateway:**
+```bash
+  cd api_gateway
+  npm install
+  npm start
+  ```
+
+### Passo 5: Inicialização da Interface Visual
+No último terminal, ligue a camada cliente:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-O sistema estará disponível para acesso no navegador em ` http://localhost:5173/` (ou a porta configurada no Frontend).
+Acesse o endereço fornecido no terminal (geralmente `http://localhost:5173/`) no seu navegador web para interagir com o ecossistema completo.
 
-## 👥 Equipe
+---
+
+## 👥 Equipe e Atribuições
 * **Pyêtro Augusto Malaquias** 
-* **Lídio Júnior Pereira Batista** 
+* **Lídio Júnior Pereira Batista**
 * **Helder Jose Avila** 
-* **Gustavo Batista Bissoli** 
+* **Gustavo Batista Bissoli**
 * **Miguel Chagas Figueiredo** 
