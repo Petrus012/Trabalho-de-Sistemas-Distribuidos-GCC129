@@ -51,11 +51,8 @@
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  width: 100%;
+  margin: 0;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -108,4 +105,94 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* ---------------------------------------------------------------------------
+   Markdown das respostas do ARIA — compacto e organizado dentro do balão
+--------------------------------------------------------------------------- */
+.markdown-resposta {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.markdown-resposta > *:first-child {
+  margin-top: 0;
+}
+.markdown-resposta > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-resposta p {
+  margin: 0 0 10px;
+}
+
+.markdown-resposta h1,
+.markdown-resposta h2,
+.markdown-resposta h3,
+.markdown-resposta h4 {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: inherit;
+  margin: 14px 0 6px;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.markdown-resposta ul,
+.markdown-resposta ol {
+  margin: 6px 0 10px;
+  padding-left: 20px;
+}
+
+.markdown-resposta li {
+  margin: 3px 0;
+}
+
+.markdown-resposta li > p {
+  margin: 0;
+}
+
+.markdown-resposta strong {
+  font-weight: 700;
+}
+
+.markdown-resposta a {
+  color: #0284c7;
+  text-decoration: underline;
+}
+
+.markdown-resposta code {
+  font-size: 13.5px;
+  padding: 2px 6px;
+}
+
+.markdown-resposta pre {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 12px 14px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.markdown-resposta pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-resposta blockquote {
+  margin: 8px 0;
+  padding: 4px 0 4px 12px;
+  border-left: 3px solid #cbd5e1;
+  color: #475569;
+}
+
+.markdown-resposta table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 14px;
+}
+.markdown-resposta th,
+.markdown-resposta td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  text-align: left;
 }
