@@ -112,6 +112,6 @@ Acesse o endereço fornecido no terminal (geralmente `http://localhost:5173/`) n
 ## 👥 Equipe e Atribuições
 * **Pyêtro Augusto Malaquias** 
 * **Lídio Júnior Pereira Batista**
-* **Helder Jose Avila** 
+* **Helder Jose Ávila** 
 * **Gustavo Batista Bissoli**
 * **Miguel Chagas Figueiredo** 
