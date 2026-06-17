@@ -10,11 +10,11 @@ Este projeto implementa um sistema inteligente, distribuído e escalável para a
 ---
 
 ## 🏗️ Arquitetura do Sistema
-Na Fase 3, o ecossistema migrou de uma estrutura de acoplamento parcial para uma malha de microsserviços altamente especializada e resiliente, composta por 6 componentes ativos:
+Na Fase 3, o ecossistema migrou de uma estrutura de acoplamento parcial para uma malha de microsserviços altamente especializada e resiliente, composta por 7 componentes:
 
 1. **Frontend (React / TypeScript / Vite):** Interface gráfica de usuário (App do Estudante) onde as perguntas são feitas e o histórico de interações é renderizado em tempo real.
 2. **API Gateway (Node.js / Express):** Ponto de entrada único e centralizado do backend (porta `8000`). Gerencia as políticas de roteamento e distribui as chamadas de forma transparente.
-3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe as ferramentas do sistema (ex: `consultar_documentos_aula`) e orquestra a injeção de contexto dinâmico para os modelos de linguagem.
+3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe ferramentas externas via *Model Context Protocol*. Sua principal ferramenta é a `buscar_web`, que realiza buscas atualizadas na internet por meio da **API Tavily** (`https://api.tavily.com`). É acionada quando a resposta não está no material de aula (PDFs), permitindo que a IA complemente as respostas com informações da web.
 4. **Microsserviço RAG (`rag_service` - Python / FastAPI / LlamaIndex):** Responsável pelo processamento, chunking e indexação dos PDFs locais, alimentando e persistindo os embeddings no banco de dados vetorial.
 5. **Microsserviço de IA (`ia_service` - Python / FastAPI):** Camada dedicada exclusivamente para isolar e gerenciar as chamadas externas, o consumo e o processamento de prompts junto aos modelos de linguagem.
 6. **Microsserviço de Histórico (`historico_service` - Python / FastAPI):** Responsável por gerenciar o estado, a persistência e a recuperação cronológica do contexto de conversação de cada estudante.
@@ -59,26 +59,27 @@ Por se tratar de uma arquitetura de múltiplos microsserviços distribuídos, ca
 ### Passo 2: Configuração dos Ambientes (.env)
 Antes de ligar os serviços, atualize os arquivos `.env` dentro das pastas `rag_service`, `ia_service` e `historico_service` colando a URL gerada pelo Ngrok no campo correspondente à comunicação com o modelo de linguagem.
 
+> **⚠️ Pré-requisito (Banco de Dados):** O `historico_service` persiste as conversas em um banco **PostgreSQL**. Antes de iniciá-lo, garanta que haja uma instância do PostgreSQL em execução em `localhost:5432` com o banco `aria_historico` disponível (a conexão padrão usa o usuário/senha `postgres`/`postgres`, sobrescrevível via variável `DATABASE_URL` no `.env`).
+>
+> **🌐 Busca na Web (Tavily):** Para que a IA consiga buscar informações atualizadas na internet, defina a variável `TAVILY_API_KEY` no arquivo `.env` do `mcp_service` (use o `mcp_service/.env.example` como base). Sem essa chave, a ferramenta `buscar_web` fica indisponível e o sistema responde apenas com base nos PDFs.
+
 ### Passo 3: Inicialização dos Serviços em Python
 Abra terminais separados para cada serviço e execute:
 
 * **Microsserviço RAG:**
 ```bash
-  cd rag-service
-  pip install -r requirements.txt
+  cd rag_service
   uvicorn main:app --port 8001 --reload
   ```
 * **Microsserviço de IA:**
 ```bash
   cd ia_service
-  pip install -r requirements.txt
-  uvicorn main:app --port 8003 --reload
+  uvicorn main:app --port 8004 --reload
   ```
 * **Microsserviço de Histórico:**
 ```bash
   cd historico_service
-  pip install -r requirements.txt
-  uvicorn main:app --port 8004 --reload
+  uvicorn main:app --port 8003 --reload
   ```
 
 ### Passo 4: Inicialização dos Serviços em Node.js / TypeScript
