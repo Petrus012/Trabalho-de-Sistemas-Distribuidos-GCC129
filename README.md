@@ -154,7 +154,7 @@ Acesse o endereço fornecido no terminal (geralmente `http://localhost:5173/`) n
 
 ---
 
-## 👥 Equipe e Atribuições
+## 👥 Equipe 
 * **Pyêtro Augusto Malaquias** 
 * **Lídio Júnior Pereira Batista**
 * **Helder Jose Ávila** 
