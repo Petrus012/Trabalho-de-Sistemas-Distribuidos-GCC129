@@ -12,6 +12,45 @@ Este projeto implementa um sistema inteligente, distribuído e escalável para a
 ## 🏗️ Arquitetura do Sistema
 Na Fase 3, o ecossistema migrou de uma estrutura de acoplamento parcial para uma malha de microsserviços altamente especializada e resiliente, composta por 7 componentes:
 
+```mermaid
+flowchart TD
+    User([👩‍🎓 Estudante])
+
+    subgraph Cliente
+        FE["🖥️ Frontend<br/>React · TS · Vite<br/>:5173"]
+    end
+
+    subgraph Backend["Backend — Malha de Microsserviços (local)"]
+        GW["🚪 API Gateway<br/>Node.js · Express<br/>:8000"]
+        RAG["📚 rag_service<br/>FastAPI · LlamaIndex<br/>:8001"]
+        MCP["🛠️ mcp_service<br/>TypeScript · MCP<br/>:8002"]
+        HIST["🗂️ historico_service<br/>FastAPI<br/>:8003"]
+        IA["🤖 ia_service<br/>FastAPI<br/>:8004"]
+        CHROMA[("🔎 ChromaDB<br/>base vetorial")]
+        PG[("🐘 PostgreSQL<br/>aria_historico")]
+    end
+
+    subgraph Nuvem["Serviços Externos (nuvem)"]
+        TAVILY["🌐 API Tavily<br/>busca na web"]
+        LLM["🧠 Qwen 2.5<br/>Ollama · Colab GPU T4<br/>via Ngrok"]
+    end
+
+    User <--> FE
+    FE <-->|"/perguntar · /upload"| GW
+
+    GW -->|"① memória da conversa"| HIST
+    GW -->|"② contexto + score"| RAG
+    GW -->|"③ gera a resposta"| IA
+    GW -. "match baixo no material →<br/>buscar_web" .-> MCP
+
+    RAG --- CHROMA
+    HIST --- PG
+    MCP -->|"resultados"| TAVILY
+    IA -->|"prompt"| LLM
+```
+
+> 🧭 **Fluxo de uma pergunta:** o Gateway busca a **memória** no Histórico → pede **contexto + score** ao RAG → se o material for relevante, manda o IA **gerar** a resposta com os PDFs; caso contrário, aciona o MCP (`buscar_web` via Tavily) e então o IA gera a resposta com os resultados da web. O IA conversa com o **Qwen 2.5** hospedado no Colab.
+
 1. **Frontend (React / TypeScript / Vite):** Interface gráfica de usuário (App do Estudante) onde as perguntas são feitas e o histórico de interações é renderizado em tempo real.
 2. **API Gateway (Node.js / Express):** Ponto de entrada único e centralizado do backend (porta `8000`). Gerencia as políticas de roteamento e distribui as chamadas de forma transparente.
 3. **Servidor MCP (`mcp_service` - Node.js / TypeScript):** Componente migrado para TypeScript que expõe ferramentas externas via *Model Context Protocol*. Sua principal ferramenta é a `buscar_web`, que realiza buscas atualizadas na internet por meio da **API Tavily** (`https://api.tavily.com`). É acionada quando a resposta não está no material de aula (PDFs), permitindo que a IA complemente as respostas com informações da web.
